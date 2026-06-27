@@ -8,6 +8,7 @@ import Logger from "./lib/logger";
 import AppError from "./lib/utils";
 import indexRouter from "./routes/index.route";
 import { handleVoiceConnection } from "./services/voice.service";
+import { handleTwilioConnection } from "./services/twilio.service";
 
 const app = express();
 
@@ -31,10 +32,19 @@ const server = createServer(app);
 const voiceWss = new WebSocketServer({ noServer: true });
 voiceWss.on("connection", handleVoiceConnection);
 
+const twilioWss = new WebSocketServer({ noServer: true });
+twilioWss.on("connection", handleTwilioConnection);
+
 server.on("upgrade", (req, socket, head) => {
   if (req.url === "/voice") {
     voiceWss.handleUpgrade(req, socket, head, (ws) => {
       voiceWss.emit("connection", ws, req);
+    });
+    return;
+  }
+  if (req.url === "/twilio/stream") {
+    twilioWss.handleUpgrade(req, socket, head, (ws) => {
+      twilioWss.emit("connection", ws, req);
     });
     return;
   }
@@ -49,6 +59,7 @@ server.listen(Number(config.PORT), () => {
 async function shutdown() {
   await disconnectDB();
   voiceWss.close();
+  twilioWss.close();
   server.close(() => process.exit(0));
 }
 
