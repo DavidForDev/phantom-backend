@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import { Visitor, type IVisitor } from "../models/visitor.model";
-import { VisitorChannel, type IVisitorInformation } from "../types/visitor.types";
-import Logger from "../lib/logger";
+import { Visitor, type IVisitor } from "../models/visitor.model.js";
+import { VisitorChannel, type IVisitorInformation } from "../types/visitor.types.js";
+import Logger from "../lib/logger.js";
 
 export const createVisitor = async (): Promise<IVisitor> => {
   try {

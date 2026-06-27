@@ -1,6 +1,6 @@
 import { google, type gmail_v1 } from "googleapis";
-import { getAuthorizedClient } from "../lib/gmail-oauth";
-import type { GmailMessageFull, GmailMessageSummary } from "../types/gmail.types";
+import { getAuthorizedClient } from "../lib/gmail-oauth.js";
+import type { GmailMessageFull, GmailMessageSummary } from "../types/gmail.types.js";
 
 async function client(): Promise<gmail_v1.Gmail> {
   const auth = await getAuthorizedClient();

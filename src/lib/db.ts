@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import config from "./config";
-import Logger from "./logger";
+import config from "./config.js";
+import Logger from "./logger.js";
 
 let connecting: Promise<void> | null = null;
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import agentService from "../services/agent.service";
-import AppError from "../lib/utils";
-import type { AgentRequest } from "../types/agent.types";
+import agentService from "../services/agent.service.js";
+import AppError from "../lib/utils.js";
+import type { AgentRequest } from "../types/agent.types.js";
 
 const router = Router();
 

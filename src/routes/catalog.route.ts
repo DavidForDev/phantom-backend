@@ -1,5 +1,5 @@
 import { Router } from "express";
-import catalogService from "../services/catalog.service";
+import catalogService from "../services/catalog.service.js";
 
 const router = Router();
 

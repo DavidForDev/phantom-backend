@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
-import gmailService from "./gmail.service";
-import Logger from "../lib/logger";
+import gmailService from "./gmail.service.js";
+import Logger from "../lib/logger.js";
 
 export const chatTools = {
   gmail_search: tool({

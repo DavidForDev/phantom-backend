@@ -1,6 +1,6 @@
 import WebSocket from "ws";
-import Logger from "../lib/logger";
-import { GeminiLiveSession } from "./gemini-live.session";
+import Logger from "../lib/logger.js";
+import { GeminiLiveSession } from "./gemini-live.session.js";
 
 interface ClientToServer {
   type: "start" | "audio" | "stop" | "text";

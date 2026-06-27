@@ -1,4 +1,4 @@
-import type { Product } from "../types/catalog.types";
+import type { Product } from "../types/catalog.types.js";
 
 const VOICE_SYSTEM = `You are "ფანტომი" (Phantom), a Georgian-speaking AI shopping assistant having a LIVE VOICE conversation.
 

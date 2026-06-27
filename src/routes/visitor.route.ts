@@ -1,7 +1,7 @@
 import { Router } from "express";
-import visitorService from "../services/visitor.service";
-import AppError from "../lib/utils";
-import Logger from "../lib/logger";
+import visitorService from "../services/visitor.service.js";
+import AppError from "../lib/utils.js";
+import Logger from "../lib/logger.js";
 
 const router = Router();
 

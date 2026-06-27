@@ -1,6 +1,6 @@
 import mongoose, { Schema, type Document } from "mongoose";
-import { defaultConfig } from "./index.model";
-import { MessageRole } from "../types/message.types";
+import { defaultConfig } from "./index.model.js";
+import { MessageRole } from "../types/message.types.js";
 
 export interface IMessage extends Document {
   visitorId: string;

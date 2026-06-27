@@ -4,10 +4,10 @@ import {
   loadToken,
   makeOAuthClient,
   saveToken,
-} from "../lib/gmail-oauth";
-import gmailService from "../services/gmail.service";
-import AppError from "../lib/utils";
-import Logger from "../lib/logger";
+} from "../lib/gmail-oauth.js";
+import gmailService from "../services/gmail.service.js";
+import AppError from "../lib/utils.js";
+import Logger from "../lib/logger.js";
 
 const router = Router();
 

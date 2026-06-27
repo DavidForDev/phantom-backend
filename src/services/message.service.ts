@@ -1,6 +1,6 @@
-import { Message, type IMessage } from "../models/message.model";
-import type { MessageRole, ChatMessage } from "../types/message.types";
-import Logger from "../lib/logger";
+import { Message, type IMessage } from "../models/message.model.js";
+import type { MessageRole, ChatMessage } from "../types/message.types.js";
+import Logger from "../lib/logger.js";
 
 export const getMessagesByVisitorId = async (
   visitorId: string

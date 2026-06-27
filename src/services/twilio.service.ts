@@ -1,13 +1,13 @@
 import WebSocket from "ws";
-import Logger from "../lib/logger";
+import Logger from "../lib/logger.js";
 import {
   mulawDecode,
   mulawEncode,
   upsample8to16,
   downsample24to8,
   chunkBuffer,
-} from "../lib/audio";
-import { GeminiLiveSession } from "./gemini-live.session";
+} from "../lib/audio.js";
+import { GeminiLiveSession } from "./gemini-live.session.js";
 
 // Twilio Media Streams protocol (https://www.twilio.com/docs/voice/media-streams/websocket-messages):
 //   inbound events from Twilio:

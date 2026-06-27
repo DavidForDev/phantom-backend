@@ -1,11 +1,11 @@
 import WebSocket from "ws";
-import config from "../lib/config";
-import Logger from "../lib/logger";
-import { buildVoiceSystemPrompt } from "../prompts/voice.prompt";
-import { getCatalog } from "./catalog.service";
-import { appendMessage } from "./message.service";
-import { MessageRole } from "../types/message.types";
-import gmailService from "./gmail.service";
+import config from "../lib/config.js";
+import Logger from "../lib/logger.js";
+import { buildVoiceSystemPrompt } from "../prompts/voice.prompt.js";
+import { getCatalog } from "./catalog.service.js";
+import { appendMessage } from "./message.service.js";
+import { MessageRole } from "../types/message.types.js";
+import gmailService from "./gmail.service.js";
 
 const GEMINI_LIVE_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${
   process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? ""

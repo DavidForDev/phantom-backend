@@ -1,9 +1,9 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
-import { AGENT_SYSTEM_PROMPT, AGENT_FALLBACK_ACTION } from "../prompts/agent.prompt";
-import type { AgentAction, AgentRequest } from "../types/agent.types";
-import config from "../lib/config";
-import Logger from "../lib/logger";
+import { AGENT_SYSTEM_PROMPT, AGENT_FALLBACK_ACTION } from "../prompts/agent.prompt.js";
+import type { AgentAction, AgentRequest } from "../types/agent.types.js";
+import config from "../lib/config.js";
+import Logger from "../lib/logger.js";
 
 const VALID_KINDS = new Set(["click", "type", "scroll", "ask_user", "done"]);
 

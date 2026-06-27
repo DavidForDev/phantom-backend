@@ -1,9 +1,9 @@
 import { Router } from "express";
-import chatService from "../services/chat.service";
-import messageService from "../services/message.service";
-import { MessageRole, type ChatMessage } from "../types/message.types";
-import AppError from "../lib/utils";
-import Logger from "../lib/logger";
+import chatService from "../services/chat.service.js";
+import messageService from "../services/message.service.js";
+import { MessageRole, type ChatMessage } from "../types/message.types.js";
+import AppError from "../lib/utils.js";
+import Logger from "../lib/logger.js";
 
 const router = Router();
 

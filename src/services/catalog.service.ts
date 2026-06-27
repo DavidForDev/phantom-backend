@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
-import type { Product, CategorySummary } from "../types/catalog.types";
+import type { Product, CategorySummary } from "../types/catalog.types.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 

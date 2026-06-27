@@ -1,6 +1,6 @@
 import mongoose, { Schema, type Document } from "mongoose";
-import { defaultConfig } from "./index.model";
-import { VisitorChannel, type IVisitorInformation } from "../types/visitor.types";
+import { defaultConfig } from "./index.model.js";
+import { VisitorChannel, type IVisitorInformation } from "../types/visitor.types.js";
 
 export interface IVisitor extends Document {
   visitorId: string;

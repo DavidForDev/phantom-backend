@@ -1,4 +1,4 @@
-import type { AgentAction } from "../types/agent.types";
+import type { AgentAction } from "../types/agent.types.js";
 
 export const AGENT_SYSTEM_PROMPT = `You are a Georgian-speaking AI shopping agent operating a website. You control the page by issuing ONE action at a time.
 

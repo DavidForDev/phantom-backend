@@ -1,11 +1,11 @@
 import { Router } from "express";
-import visitorRouter from "./visitor.route";
-import messageRouter from "./message.route";
-import chatRouter from "./chat.route";
-import agentRouter from "./agent.route";
-import catalogRouter from "./catalog.route";
-import gmailRouter from "./gmail.route";
-import twilioRouter from "./twilio.route";
+import visitorRouter from "./visitor.route.js";
+import messageRouter from "./message.route.js";
+import chatRouter from "./chat.route.js";
+import agentRouter from "./agent.route.js";
+import catalogRouter from "./catalog.route.js";
+import gmailRouter from "./gmail.route.js";
+import twilioRouter from "./twilio.route.js";
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import type { Product } from "../types/catalog.types";
+import type { Product } from "../types/catalog.types.js";
 
 const CHAT_SYSTEM = `You are "ფანტომი" (Phantom), a helpful Georgian-speaking AI assistant.
 Your main job is shopping help (laptops, phones, headphones, tablets, accessories) using the product catalog below.

@@ -1,8 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { google, type Auth } from "googleapis";
-import config from "./config";
-import Logger from "./logger";
+import config from "./config.js";
+import Logger from "./logger.js";
 
 export const GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
 

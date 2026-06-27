@@ -1,11 +1,11 @@
 import { streamText, stepCountIs } from "ai";
 import { google } from "@ai-sdk/google";
-import { buildChatSystemPrompt } from "../prompts/chat.prompt";
-import { getCatalog } from "./catalog.service";
-import { chatTools } from "./chat-tools";
-import config from "../lib/config";
-import Logger from "../lib/logger";
-import type { ChatMessage } from "../types/message.types";
+import { buildChatSystemPrompt } from "../prompts/chat.prompt.js";
+import { getCatalog } from "./catalog.service.js";
+import { chatTools } from "./chat-tools.js";
+import config from "../lib/config.js";
+import Logger from "../lib/logger.js";
+import type { ChatMessage } from "../types/message.types.js";
 
 export const streamChatResponse = (messages: ChatMessage[]) => {
   const system = buildChatSystemPrompt(getCatalog());

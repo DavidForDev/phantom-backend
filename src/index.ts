@@ -2,13 +2,13 @@ import express, { type ErrorRequestHandler } from "express";
 import { createServer } from "http";
 import cors from "cors";
 import { WebSocketServer } from "ws";
-import config from "./lib/config";
-import { connectDB, disconnectDB } from "./lib/db";
-import Logger from "./lib/logger";
-import AppError from "./lib/utils";
-import indexRouter from "./routes/index.route";
-import { handleVoiceConnection } from "./services/voice.service";
-import { handleTwilioConnection } from "./services/twilio.service";
+import config from "./lib/config.js";
+import { connectDB, disconnectDB } from "./lib/db.js";
+import Logger from "./lib/logger.js";
+import AppError from "./lib/utils.js";
+import indexRouter from "./routes/index.route.js";
+import { handleVoiceConnection } from "./services/voice.service.js";
+import { handleTwilioConnection } from "./services/twilio.service.js";
 
 const app = express();
 
