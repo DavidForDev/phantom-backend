@@ -16,6 +16,7 @@ export function makeOAuthClient(): Auth.OAuth2Client {
       "Gmail OAuth not configured. Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in backend/.env"
     );
   }
+  // @ts-expect-error googleapis version mismatch between OAuth2Client types
   return new google.auth.OAuth2(
     config.GMAIL_CLIENT_ID,
     config.GMAIL_CLIENT_SECRET,

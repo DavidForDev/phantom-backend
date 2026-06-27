@@ -4,6 +4,7 @@ import type { GmailMessageFull, GmailMessageSummary } from "../types/gmail.types
 
 async function client(): Promise<gmail_v1.Gmail> {
   const auth = await getAuthorizedClient();
+  // @ts-expect-error googleapis version mismatch between OAuth2Client types
   return google.gmail({ version: "v1", auth });
 }
 
