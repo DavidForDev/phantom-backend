@@ -17,19 +17,12 @@ export const streamChatResponse = (messages: ChatMessage[]) => {
     tools: chatTools,
     stopWhen: stepCountIs(5),
     onStepFinish: ({ toolCalls, finishReason }) => {
-      if (toolCalls?.length) {
-        Logger.info(
-          `[chat] step finished, tool calls: ${toolCalls
-            .map((c) => c.toolName)
-            .join(", ")} (finishReason: ${finishReason})`
-        );
-      } else {
-        Logger.info(`[chat] step finished, no tool calls (finishReason: ${finishReason})`);
-      }
+      const names = toolCalls?.length
+        ? toolCalls.map((c) => c.toolName).join(", ")
+        : "none";
+      Logger.info(
+        `[chat] step finished, tool calls: ${names} (finishReason: ${finishReason})`
+      );
     },
   });
-};
-
-export default {
-  streamChatResponse,
 };

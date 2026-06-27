@@ -2,74 +2,87 @@ import { google, type gmail_v1 } from "googleapis";
 import { getAuthorizedClient } from "../lib/gmail-oauth.js";
 import type { GmailMessageFull, GmailMessageSummary } from "../types/gmail.types.js";
 
-async function client(): Promise<gmail_v1.Gmail> {
+const MAX_BODY_CHARS = 8000;
+const MIN_RESULTS = 1;
+const MAX_RESULTS = 25;
+const DEFAULT_RESULTS = 5;
+
+const gmailClient = async (): Promise<gmail_v1.Gmail> => {
   const auth = await getAuthorizedClient();
   // @ts-expect-error googleapis version mismatch between OAuth2Client types
   return google.gmail({ version: "v1", auth });
-}
+};
 
-function header(headers: gmail_v1.Schema$MessagePartHeader[] | undefined, name: string): string {
-  const h = headers?.find((x) => x.name?.toLowerCase() === name.toLowerCase());
-  return h?.value ?? "";
-}
+const headerValue = (
+  headers: gmail_v1.Schema$MessagePartHeader[] | undefined,
+  name: string
+): string => {
+  const found = headers?.find((h) => h.name?.toLowerCase() === name.toLowerCase());
+  return found?.value ?? "";
+};
 
-function decodeBase64Url(data: string): string {
-  const normalized = data.replace(/-/g, "+").replace(/_/g, "/");
-  return Buffer.from(normalized, "base64").toString("utf8");
-}
+const decodeBase64Url = (data: string): string =>
+  Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
 
-function extractBody(payload: gmail_v1.Schema$MessagePart | undefined): string {
+const findPart = (
+  part: gmail_v1.Schema$MessagePart,
+  mimeType: string
+): gmail_v1.Schema$MessagePart | undefined => {
+  if (part.mimeType === mimeType && part.body?.data) return part;
+  for (const sub of part.parts ?? []) {
+    const match = findPart(sub, mimeType);
+    if (match) return match;
+  }
+  return undefined;
+};
+
+const stripHtml = (html: string): string =>
+  html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const extractBody = (payload: gmail_v1.Schema$MessagePart | undefined): string => {
   if (!payload) return "";
-
-  // Prefer text/plain, fall back to text/html, then any nested part.
-  const findPart = (
-    part: gmail_v1.Schema$MessagePart,
-    mime: string
-  ): gmail_v1.Schema$MessagePart | undefined => {
-    if (part.mimeType === mime && part.body?.data) return part;
-    for (const sub of part.parts ?? []) {
-      const found = findPart(sub, mime);
-      if (found) return found;
-    }
-    return undefined;
-  };
 
   const plain = findPart(payload, "text/plain");
   if (plain?.body?.data) return decodeBase64Url(plain.body.data);
 
   const html = findPart(payload, "text/html");
-  if (html?.body?.data) {
-    return decodeBase64Url(html.body.data)
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+  if (html?.body?.data) return stripHtml(decodeBase64Url(html.body.data));
 
   if (payload.body?.data) return decodeBase64Url(payload.body.data);
   return "";
-}
+};
 
-function toSummary(msg: gmail_v1.Schema$Message): GmailMessageSummary {
+const toSummary = (msg: gmail_v1.Schema$Message): GmailMessageSummary => {
   const headers = msg.payload?.headers;
   return {
     id: msg.id ?? "",
     threadId: msg.threadId ?? "",
-    from: header(headers, "From"),
-    to: header(headers, "To"),
-    subject: header(headers, "Subject"),
-    date: header(headers, "Date"),
+    from: headerValue(headers, "From"),
+    to: headerValue(headers, "To"),
+    subject: headerValue(headers, "Subject"),
+    date: headerValue(headers, "Date"),
     snippet: msg.snippet ?? "",
   };
-}
+};
 
-export async function listMessages(opts: {
+export interface ListMessagesOptions {
   query?: string;
   max?: number;
-}): Promise<GmailMessageSummary[]> {
-  const gmail = await client();
-  const maxResults = Math.min(Math.max(opts.max ?? 5, 1), 25);
+}
+
+export const listMessages = async (
+  opts: ListMessagesOptions
+): Promise<GmailMessageSummary[]> => {
+  const gmail = await gmailClient();
+  const maxResults = Math.min(
+    Math.max(opts.max ?? DEFAULT_RESULTS, MIN_RESULTS),
+    MAX_RESULTS
+  );
 
   const list = await gmail.users.messages.list({
     userId: "me",
@@ -77,7 +90,7 @@ export async function listMessages(opts: {
     maxResults,
   });
 
-  const ids = list.data.messages?.map((m) => m.id).filter((x): x is string => !!x) ?? [];
+  const ids = list.data.messages?.map((m) => m.id).filter((id): id is string => !!id) ?? [];
   if (ids.length === 0) return [];
 
   const fetched = await Promise.all(
@@ -91,11 +104,11 @@ export async function listMessages(opts: {
     )
   );
 
-  return fetched.map((r) => toSummary(r.data));
-}
+  return fetched.map((res) => toSummary(res.data));
+};
 
-export async function getMessage(id: string): Promise<GmailMessageFull> {
-  const gmail = await client();
+export const getMessage = async (id: string): Promise<GmailMessageFull> => {
+  const gmail = await gmailClient();
   const res = await gmail.users.messages.get({
     userId: "me",
     id,
@@ -103,7 +116,5 @@ export async function getMessage(id: string): Promise<GmailMessageFull> {
   });
   const summary = toSummary(res.data);
   const body = extractBody(res.data.payload ?? undefined);
-  return { ...summary, body: body.slice(0, 8000) };
-}
-
-export default { listMessages, getMessage };
+  return { ...summary, body: body.slice(0, MAX_BODY_CHARS) };
+};

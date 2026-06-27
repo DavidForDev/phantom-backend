@@ -5,8 +5,8 @@ import {
   makeOAuthClient,
   saveToken,
 } from "../lib/gmail-oauth.js";
-import gmailService from "../services/gmail.service.js";
-import AppError from "../lib/utils.js";
+import { listMessages, getMessage } from "../services/gmail.service.js";
+import { httpError } from "../lib/errors.js";
 import Logger from "../lib/logger.js";
 
 const router = Router();
@@ -23,15 +23,13 @@ router.get("/auth", (_req, res) => {
 
 router.get("/auth/callback", async (req, res) => {
   const code = req.query.code as string | undefined;
-  if (!code) throw new AppError("Missing ?code from Google", 400);
+  if (!code) throw httpError("Missing ?code from Google", 400);
 
   const client = makeOAuthClient();
   const { tokens } = await client.getToken(code);
   await saveToken(tokens);
   Logger.info("[gmail] authorized successfully");
-  res
-    .status(200)
-    .send("<h2>Gmail connected!</h2><p>You can close this tab.</p>");
+  res.status(200).send("<h2>Gmail connected!</h2><p>You can close this tab.</p>");
 });
 
 router.get("/auth/status", async (_req, res) => {
@@ -42,12 +40,12 @@ router.get("/auth/status", async (_req, res) => {
 router.get("/messages", async (req, res) => {
   const query = (req.query.q as string | undefined) ?? undefined;
   const max = req.query.max ? Number(req.query.max) : 5;
-  const messages = await gmailService.listMessages({ query, max });
+  const messages = await listMessages({ query, max });
   res.json({ messages });
 });
 
 router.get("/messages/:id", async (req, res) => {
-  const message = await gmailService.getMessage(req.params.id);
+  const message = await getMessage(req.params.id);
   res.json({ message });
 });
 

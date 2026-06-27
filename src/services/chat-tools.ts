@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import gmailService from "./gmail.service.js";
+import { listMessages, getMessage } from "./gmail.service.js";
 import Logger from "../lib/logger.js";
 
 export const chatTools = {
@@ -24,7 +24,7 @@ export const chatTools = {
     }),
     execute: async ({ query, max }) => {
       try {
-        const messages = await gmailService.listMessages({ query, max });
+        const messages = await listMessages({ query, max });
         return { messages };
       } catch (err) {
         Logger.warn("[chat-tools] gmail_search failed", err);
@@ -42,7 +42,7 @@ export const chatTools = {
     }),
     execute: async ({ id }) => {
       try {
-        const message = await gmailService.getMessage(id);
+        const message = await getMessage(id);
         return { message };
       } catch (err) {
         Logger.warn("[chat-tools] gmail_get_message failed", err);

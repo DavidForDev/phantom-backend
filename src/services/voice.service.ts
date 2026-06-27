@@ -1,6 +1,9 @@
 import WebSocket from "ws";
 import Logger from "../lib/logger.js";
-import { GeminiLiveSession } from "./gemini-live.session.js";
+import {
+  createGeminiLiveSession,
+  type GeminiLiveSession,
+} from "./gemini-live.session.js";
 
 interface ClientToServer {
   type: "start" | "audio" | "stop" | "text";
@@ -10,19 +13,59 @@ interface ClientToServer {
 }
 
 interface ServerToClient {
-  type: "ready" | "audio" | "input_transcript" | "output_transcript" | "turn_complete" | "error";
+  type:
+    | "ready"
+    | "audio"
+    | "input_transcript"
+    | "output_transcript"
+    | "turn_complete"
+    | "error";
   audio?: string;
   text?: string;
   message?: string;
 }
 
-export function handleVoiceConnection(client: WebSocket): void {
+export const handleVoiceConnection = (client: WebSocket): void => {
   let session: GeminiLiveSession | null = null;
 
-  const sendToClient = (msg: ServerToClient) => {
+  const sendToClient = (msg: ServerToClient): void => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(msg));
     }
+  };
+
+  const closeSession = (): void => {
+    session?.close();
+    session = null;
+  };
+
+  const openSession = (visitorId: string | undefined): void => {
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      sendToClient({ type: "error", message: "GOOGLE_GENERATIVE_AI_API_KEY not set" });
+      client.close();
+      return;
+    }
+    if (session) return;
+
+    session = createGeminiLiveSession({
+      visitorId,
+      tag: "voice",
+      onReady: () => sendToClient({ type: "ready" }),
+      onAudio: (pcm) =>
+        sendToClient({ type: "audio", audio: pcm.toString("base64") }),
+      onInputTranscript: (text) =>
+        sendToClient({ type: "input_transcript", text }),
+      onOutputTranscript: (text) =>
+        sendToClient({ type: "output_transcript", text }),
+      onTurnComplete: () => sendToClient({ type: "turn_complete" }),
+      onError: (message) => sendToClient({ type: "error", message }),
+      onClose: (code, reason) => {
+        if (code !== 1000 && reason) {
+          sendToClient({ type: "error", message: `Gemini: ${reason}` });
+        }
+        if (client.readyState === WebSocket.OPEN) client.close();
+      },
+    });
   };
 
   client.on("message", (raw) => {
@@ -34,28 +77,7 @@ export function handleVoiceConnection(client: WebSocket): void {
     }
 
     if (msg.type === "start") {
-      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-        sendToClient({ type: "error", message: "GOOGLE_GENERATIVE_AI_API_KEY not set" });
-        client.close();
-        return;
-      }
-      if (session) return;
-      session = new GeminiLiveSession({
-        visitorId: msg.visitorId,
-        tag: "voice",
-        onReady: () => sendToClient({ type: "ready" }),
-        onAudio: (pcm) => sendToClient({ type: "audio", audio: pcm.toString("base64") }),
-        onInputTranscript: (text) => sendToClient({ type: "input_transcript", text }),
-        onOutputTranscript: (text) => sendToClient({ type: "output_transcript", text }),
-        onTurnComplete: () => sendToClient({ type: "turn_complete" }),
-        onError: (message) => sendToClient({ type: "error", message }),
-        onClose: (code, reason) => {
-          if (code !== 1000 && reason) {
-            sendToClient({ type: "error", message: `Gemini: ${reason}` });
-          }
-          if (client.readyState === WebSocket.OPEN) client.close();
-        },
-      });
+      openSession(msg.visitorId);
       return;
     }
 
@@ -73,20 +95,15 @@ export function handleVoiceConnection(client: WebSocket): void {
     }
 
     if (msg.type === "stop") {
-      session.close();
-      session = null;
+      closeSession();
       return;
     }
   });
 
-  client.on("close", () => {
-    session?.close();
-    session = null;
-  });
+  client.on("close", closeSession);
 
   client.on("error", (err) => {
     Logger.error("[voice] client error", err);
-    session?.close();
-    session = null;
+    closeSession();
   });
-}
+};

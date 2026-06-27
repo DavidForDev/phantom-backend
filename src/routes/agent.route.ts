@@ -1,6 +1,6 @@
 import { Router } from "express";
-import agentService from "../services/agent.service.js";
-import AppError from "../lib/utils.js";
+import { generateNextAction } from "../services/agent.service.js";
+import { httpError } from "../lib/errors.js";
 import type { AgentRequest } from "../types/agent.types.js";
 
 const router = Router();
@@ -8,10 +8,10 @@ const router = Router();
 router.post("/", async (req, res) => {
   const body = req.body as Partial<AgentRequest>;
   if (!body.goal || typeof body.elements !== "string") {
-    throw new AppError("Missing goal or elements in request body", 400);
+    throw httpError("Missing goal or elements in request body", 400);
   }
 
-  const action = await agentService.generateNextAction({
+  const action = await generateNextAction({
     goal: body.goal,
     elements: body.elements,
     history: body.history,

@@ -1,19 +1,16 @@
 import { Router } from "express";
-import messageService from "../services/message.service.js";
-import AppError from "../lib/utils.js";
-import Logger from "../lib/logger.js";
+import { getMessagesByVisitorId } from "../services/message.service.js";
+import { httpError } from "../lib/errors.js";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   const visitorId = req.query.visitorId as string | undefined;
-
   if (!visitorId) {
-    Logger.error("Missing visitor ID in query parameters");
-    throw new AppError("Missing visitor ID in query parameters", 400);
+    throw httpError("Missing visitor ID in query parameters", 400);
   }
 
-  const messages = await messageService.getMessagesByVisitorId(visitorId);
+  const messages = await getMessagesByVisitorId(visitorId);
   return res.status(200).json(messages);
 });
 

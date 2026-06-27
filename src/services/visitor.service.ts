@@ -3,6 +3,11 @@ import { Visitor, type IVisitor } from "../models/visitor.model.js";
 import { VisitorChannel, type IVisitorInformation } from "../types/visitor.types.js";
 import Logger from "../lib/logger.js";
 
+export interface UpdateVisitorPayload {
+  lastVisitedTimestamp?: Date;
+  visitorInformation?: IVisitorInformation;
+}
+
 export const createVisitor = async (): Promise<IVisitor> => {
   try {
     const visitor = await Visitor.create({
@@ -10,21 +15,18 @@ export const createVisitor = async (): Promise<IVisitor> => {
       channel: VisitorChannel.WIDGET,
     });
     return visitor.toObject();
-  } catch (error) {
-    Logger.error("Error creating visitor", error);
-    throw error;
+  } catch (err) {
+    Logger.error("Error creating visitor", err);
+    throw err;
   }
 };
 
-export const findByVisitorId = async (visitorId: string): Promise<IVisitor | null> => {
+export const findByVisitorId = async (
+  visitorId: string
+): Promise<IVisitor | null> => {
   const visitor = await Visitor.findOne({ visitorId });
   return visitor ? visitor.toObject() : null;
 };
-
-interface UpdateVisitorPayload {
-  lastVisitedTimestamp?: Date;
-  visitorInformation?: IVisitorInformation;
-}
 
 export const updateVisitor = async (
   visitorId: string,
@@ -37,14 +39,8 @@ export const updateVisitor = async (
       { new: true }
     );
     return visitor ? visitor.toObject() : null;
-  } catch (error) {
-    Logger.error("Error updating visitor", error);
-    throw error;
+  } catch (err) {
+    Logger.error("Error updating visitor", err);
+    throw err;
   }
-};
-
-export default {
-  createVisitor,
-  findByVisitorId,
-  updateVisitor,
 };

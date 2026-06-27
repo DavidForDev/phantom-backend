@@ -7,7 +7,7 @@ import Logger from "../lib/logger.js";
 
 const VALID_KINDS = new Set(["click", "type", "scroll", "ask_user", "done"]);
 
-function parseAction(raw: string): AgentAction {
+const parseAction = (raw: string): AgentAction => {
   let cleaned = raw.trim();
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
@@ -18,7 +18,7 @@ function parseAction(raw: string): AgentAction {
     throw new Error(`Invalid kind: ${parsed.kind}`);
   }
   return parsed as AgentAction;
-}
+};
 
 export const generateNextAction = async (
   request: AgentRequest
@@ -56,12 +56,8 @@ export const generateNextAction = async (
     const action = parseAction(result.text);
     Logger.debug("[agent] parsed action", action);
     return action;
-  } catch (error) {
-    Logger.error("[agent] generation failed, using fallback", error);
+  } catch (err) {
+    Logger.error("[agent] generation failed, using fallback", err);
     return AGENT_FALLBACK_ACTION;
   }
-};
-
-export default {
-  generateNextAction,
 };

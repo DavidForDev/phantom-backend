@@ -1,26 +1,28 @@
 import { Router } from "express";
-import visitorService from "../services/visitor.service.js";
-import AppError from "../lib/utils.js";
-import Logger from "../lib/logger.js";
+import {
+  createVisitor,
+  findByVisitorId,
+  updateVisitor,
+  type UpdateVisitorPayload,
+} from "../services/visitor.service.js";
+import { httpError } from "../lib/errors.js";
 
 const router = Router();
 
 router.post("/", async (_req, res) => {
-  const visitor = await visitorService.createVisitor();
+  const visitor = await createVisitor();
   return res.status(201).json(visitor);
 });
 
 router.get("/", async (req, res) => {
   const visitorId = req.query.visitorId as string | undefined;
-
   if (!visitorId) {
-    Logger.error("Missing visitor ID in query parameters");
-    throw new AppError("Missing visitor ID in query parameters", 400);
+    throw httpError("Missing visitor ID in query parameters", 400);
   }
 
-  const visitor = await visitorService.findByVisitorId(visitorId);
+  const visitor = await findByVisitorId(visitorId);
   if (!visitor) {
-    throw new AppError("Visitor not found", 404);
+    throw httpError("Visitor not found", 404);
   }
 
   return res.status(200).json(visitor);
@@ -28,16 +30,11 @@ router.get("/", async (req, res) => {
 
 router.patch("/", async (req, res) => {
   const { visitorId, lastVisitedTimestamp, visitorInformation } = req.body ?? {};
-
   if (!visitorId) {
-    Logger.error("Missing visitor ID in request body");
-    throw new AppError("Missing visitor ID in request body", 400);
+    throw httpError("Missing visitor ID in request body", 400);
   }
 
-  const updateData: {
-    lastVisitedTimestamp?: Date;
-    visitorInformation?: typeof visitorInformation;
-  } = {};
+  const updateData: UpdateVisitorPayload = {};
   if (lastVisitedTimestamp !== undefined) {
     updateData.lastVisitedTimestamp = new Date(lastVisitedTimestamp);
   }
@@ -49,9 +46,9 @@ router.patch("/", async (req, res) => {
     updateData.visitorInformation = visitorInformation;
   }
 
-  const visitor = await visitorService.updateVisitor(visitorId, updateData);
+  const visitor = await updateVisitor(visitorId, updateData);
   if (!visitor) {
-    throw new AppError("Visitor not found", 404);
+    throw httpError("Visitor not found", 404);
   }
 
   return res.status(200).json(visitor);

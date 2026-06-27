@@ -12,16 +12,11 @@ const catalog: Product[] = JSON.parse(
 export const getCatalog = (): Product[] => catalog;
 
 export const getCategories = (): CategorySummary[] => {
-  const catMap = new Map<string, number>();
-  for (const p of catalog) {
-    catMap.set(p.category, (catMap.get(p.category) || 0) + p.popularity);
+  const totals = new Map<string, number>();
+  for (const product of catalog) {
+    totals.set(product.category, (totals.get(product.category) ?? 0) + product.popularity);
   }
-  return [...catMap.entries()]
+  return [...totals.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([name, totalPopularity]) => ({ name, totalPopularity }));
-};
-
-export default {
-  getCatalog,
-  getCategories,
 };

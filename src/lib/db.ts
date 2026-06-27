@@ -4,7 +4,7 @@ import Logger from "./logger.js";
 
 let connecting: Promise<void> | null = null;
 
-export async function connectDB(): Promise<void> {
+export const connectDB = async (): Promise<void> => {
   if (connecting) return connecting;
 
   connecting = (async () => {
@@ -24,12 +24,10 @@ export async function connectDB(): Promise<void> {
   })();
 
   return connecting;
-}
+};
 
-export async function disconnectDB(): Promise<void> {
+export const disconnectDB = async (): Promise<void> => {
   await mongoose.disconnect().catch(() => {});
-}
+};
 
-export function isDBReady(): boolean {
-  return mongoose.connection.readyState === 1;
-}
+export const isDBReady = (): boolean => mongoose.connection.readyState === 1;

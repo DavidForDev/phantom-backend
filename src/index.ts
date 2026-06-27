@@ -5,7 +5,7 @@ import { WebSocketServer } from "ws";
 import config from "./lib/config.js";
 import { connectDB, disconnectDB } from "./lib/db.js";
 import Logger from "./lib/logger.js";
-import AppError from "./lib/utils.js";
+import { isHttpError } from "./lib/errors.js";
 import indexRouter from "./routes/index.route.js";
 import { handleVoiceConnection } from "./services/voice.service.js";
 import { handleTwilioConnection } from "./services/twilio.service.js";
@@ -18,7 +18,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use("/", indexRouter);
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  if (err instanceof AppError) {
+  if (isHttpError(err)) {
     res.status(err.statusCode).json({ error: { message: err.message } });
     return;
   }
@@ -56,12 +56,12 @@ server.listen(Number(config.PORT), () => {
   connectDB().catch(() => {});
 });
 
-async function shutdown() {
+const shutdown = async (): Promise<void> => {
   await disconnectDB();
   voiceWss.close();
   twilioWss.close();
   server.close(() => process.exit(0));
-}
+};
 
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);

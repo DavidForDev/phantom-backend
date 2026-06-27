@@ -1,14 +1,14 @@
 import { Router } from "express";
-import catalogService from "../services/catalog.service.js";
+import { getCatalog, getCategories } from "../services/catalog.service.js";
 
 const router = Router();
 
 router.get("/", (_req, res) => {
-  res.status(200).json(catalogService.getCatalog());
+  res.status(200).json(getCatalog());
 });
 
 router.get("/categories", (_req, res) => {
-  res.status(200).json(catalogService.getCategories());
+  res.status(200).json(getCategories());
 });
 
 export default router;

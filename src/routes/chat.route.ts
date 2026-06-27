@@ -1,11 +1,16 @@
 import { Router } from "express";
-import chatService from "../services/chat.service.js";
-import messageService from "../services/message.service.js";
+import { streamChatResponse } from "../services/chat.service.js";
+import { appendMessage } from "../services/message.service.js";
 import { MessageRole, type ChatMessage } from "../types/message.types.js";
-import AppError from "../lib/utils.js";
+import { httpError } from "../lib/errors.js";
 import Logger from "../lib/logger.js";
 
 const router = Router();
+
+const TOOL_LABELS: Record<string, string> = {
+  gmail_search: "📧 ვამოწმებ მეილებს",
+  gmail_get_message: "📖 ვკითხულობ მეილის შინაარსს",
+};
 
 router.post("/", async (req, res) => {
   const { messages, visitorId } = req.body as {
@@ -14,63 +19,60 @@ router.post("/", async (req, res) => {
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    throw new AppError("Missing messages in request body", 400);
+    throw httpError("Missing messages in request body", 400);
   }
 
   if (visitorId) {
     const lastUserMessage = [...messages].reverse().find((m) => m.role === MessageRole.USER);
     if (lastUserMessage) {
-      await messageService.appendMessage(visitorId, MessageRole.USER, lastUserMessage.content);
+      await appendMessage(visitorId, MessageRole.USER, lastUserMessage.content);
     }
   }
 
   Logger.info(`[chat] ${messages.length} messages, streaming response...`);
 
-  const result = chatService.streamChatResponse(messages);
+  const result = streamChatResponse(messages);
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
-  const send = (payload: Record<string, unknown>) =>
+  const send = (payload: Record<string, unknown>): void => {
     res.write(`data: ${JSON.stringify(payload)}\n\n`);
-
-  const toolLabels: Record<string, string> = {
-    gmail_search: "📧 ვამოწმებ მეილებს",
-    gmail_get_message: "📖 ვკითხულობ მეილის შინაარსს",
   };
 
-  let total = "";
+  let totalText = "";
   let toolCallCount = 0;
   let toolResultCount = 0;
 
   for await (const part of result.fullStream) {
     switch (part.type) {
       case "text-delta": {
-        const delta = (part as { text?: string; textDelta?: string }).text
-          ?? (part as { textDelta?: string }).textDelta
-          ?? "";
+        const delta =
+          (part as { text?: string; textDelta?: string }).text ??
+          (part as { textDelta?: string }).textDelta ??
+          "";
         if (!delta) break;
-        total += delta;
+        totalText += delta;
         send({ type: "text", text: delta });
         break;
       }
+
       case "tool-call": {
         toolCallCount++;
         const name = (part as { toolName?: string }).toolName ?? "tool";
-        const label = toolLabels[name] ?? `🔧 ${name}`;
+        const label = TOOL_LABELS[name] ?? `🔧 ${name}`;
         const input = (part as { input?: unknown }).input;
         Logger.info(`[chat] tool-call: ${name} input=${JSON.stringify(input)}`);
         send({ type: "status", text: `${label}…` });
         break;
       }
+
       case "tool-result": {
         toolResultCount++;
         const name = (part as { toolName?: string }).toolName ?? "tool";
-        const output = (part as { output?: unknown }).output;
-        const count = Array.isArray((output as { messages?: unknown[] })?.messages)
-          ? (output as { messages: unknown[] }).messages.length
-          : undefined;
+        const output = (part as { output?: { messages?: unknown[] } }).output;
+        const count = Array.isArray(output?.messages) ? output.messages.length : undefined;
         Logger.info(
           `[chat] tool-result: ${name} ${count !== undefined ? `(${count} items)` : ""}`
         );
@@ -83,23 +85,24 @@ router.post("/", async (req, res) => {
         });
         break;
       }
+
       case "error": {
-        const err = (part as { error?: unknown }).error;
-        Logger.error("[chat] stream error part", err);
+        Logger.error("[chat] stream error part", (part as { error?: unknown }).error);
         send({ type: "status", text: "⚠️ შეცდომა მოხდა" });
         break;
       }
+
       default:
         break;
     }
   }
 
-  if (visitorId && total.length > 0) {
-    await messageService.appendMessage(visitorId, MessageRole.ASSISTANT, total);
+  if (visitorId && totalText.length > 0) {
+    await appendMessage(visitorId, MessageRole.ASSISTANT, totalText);
   }
 
   Logger.info(
-    `[chat] streamed ${total.length} chars, toolCalls=${toolCallCount}, toolResults=${toolResultCount}`
+    `[chat] streamed ${totalText.length} chars, toolCalls=${toolCallCount}, toolResults=${toolResultCount}`
   );
   res.write("data: [DONE]\n\n");
   res.end();

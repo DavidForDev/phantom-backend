@@ -18,12 +18,7 @@ export const appendMessage = async (
 ): Promise<void> => {
   try {
     await Message.create({ visitorId, role, content });
-  } catch (error) {
-    Logger.error("Error appending message", error);
+  } catch (err) {
+    Logger.error("Error appending message", err);
   }
-};
-
-export default {
-  getMessagesByVisitorId,
-  appendMessage,
 };
