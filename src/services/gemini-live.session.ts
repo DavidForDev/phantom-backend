@@ -69,16 +69,20 @@ const runGmailFunction = async (
 const GEORGIAN_KEEP_REGEX = /[^Ⴀ-ჿⴀ-⴯0-9\s.,!?;:'"\-()₾]/gu;
 const PUNCTUATION_RUN_REGEX = /(\s*[,.!?;:'"\-()])(\s*[,.!?;:'"\-()])+/g;
 const NON_GEORGIAN_SCRIPTS_REGEX = /[぀-ゟ゠-ヿㇰ-ㇿ一-鿿가-힯ᄀ-ᇿ㄰-㆏Ѐ-ӿ]/g;
+const CONTROL_TOKEN_REGEX = /<\/?ctrl\d+>|<\/?(?:eos|bos|pad|sep|cls|mask|audio|turn_complete)[^>]*>/gi;
+
+const stripControlTokens = (text: string): string =>
+  text.replace(CONTROL_TOKEN_REGEX, "");
 
 const keepGeorgianOnly = (text: string): string =>
-  text
+  stripControlTokens(text)
     .replace(GEORGIAN_KEEP_REGEX, "")
     .replace(PUNCTUATION_RUN_REGEX, "$1")
     .replace(/\s+/g, " ")
     .trim();
 
 const stripNonGeorgianScripts = (text: string): string =>
-  text.replace(NON_GEORGIAN_SCRIPTS_REGEX, "");
+  stripControlTokens(text).replace(NON_GEORGIAN_SCRIPTS_REGEX, "");
 
 export interface GeminiLiveSessionOptions {
   visitorId?: string;
@@ -216,7 +220,16 @@ export const createGeminiLiveSession = (
     }
 
     if (sc.turnComplete) {
-      Logger.info(`[${tag}] turn complete — forwarded ${audioChunksForwarded} audio chunks`);
+      const hadText = pendingOutputTranscript.trim().length > 0;
+      if (audioChunksForwarded === 0 && hadText) {
+        Logger.warn(
+          `[${tag}] turn complete with text but ZERO audio chunks — model returned text-only output`
+        );
+      } else {
+        Logger.info(
+          `[${tag}] turn complete — forwarded ${audioChunksForwarded} audio chunks`
+        );
+      }
       audioChunksForwarded = 0;
       flushTranscripts().catch((err) => Logger.error(`[${tag}] flush error`, err));
       opts.onTurnComplete?.();
